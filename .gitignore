@@ -1,0 +1,7 @@
+.idea/
+.DS_Store
+*.work
+secret*
+!secretariat*
+*.iml
+node_modules/
