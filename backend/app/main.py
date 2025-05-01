@@ -1,10 +1,18 @@
+import os
+from os.path import dirname, join
+
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import text
 from app.schemas.notes import NoteCreate, NoteResponse
 from app.database import engine, Base, get_async_session
 from app.crud.notes import create_note, get_note, get_notes, update_note, delete_note
 
+dotenv_path = join(dirname(dirname(__file__)), ".env")
+load_dotenv(dotenv_path)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,7 +22,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[os.getenv("ALLOW_ORIGIN_URL")],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -52,3 +66,10 @@ async def delete_note_endpoint(note_id: int, db: AsyncSession = Depends(get_asyn
     if not success:
         raise HTTPException(status_code=404, detail="Note not found")
     return {"message": "Note deleted successfully"}
+
+
+@app.get("/notes-count")
+async def get_notes_count(db: AsyncSession = Depends(get_async_session)):
+    result = await db.execute(text("SELECT COUNT(*) FROM notes"))
+    count = result.scalar()
+    return {"count": count}
