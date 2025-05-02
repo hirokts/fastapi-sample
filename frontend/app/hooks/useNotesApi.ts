@@ -1,5 +1,7 @@
 import { useQuery, useMutation, UseQueryResult, UseMutationResult, useQueryClient } from '@tanstack/react-query';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Note } from '@/app/lib/definitions';
+import { getAccessToken } from '@/app/lib/auth0Token';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -17,11 +19,18 @@ export type NoteState = {
  * @returns ノート数のクエリ結果
  */
 export function useNotesCountQuery(options = {}): UseQueryResult<number, Error> {
+  const { getAccessTokenSilently } = useAuth0();
 
   return useQuery<number, Error>({
     queryKey: ['notes-count'],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/notes-count`);
+      const accessToken = await getAccessToken(getAccessTokenSilently);
+
+      const res = await fetch(`${API_BASE_URL}/notes-count`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -43,12 +52,18 @@ export function useNotesCountQuery(options = {}): UseQueryResult<number, Error> 
  * @returns ノート一覧のクエリ結果
  */
 export function useNotesQuery(skip = 0, limit = 10, options = {}): UseQueryResult<Note[], Error> {
+  const { getAccessTokenSilently } = useAuth0();
 
   return useQuery<Note[], Error>({
     queryKey: ['notes', skip, limit],
     queryFn: async () => {
+      const accessToken = await getAccessToken(getAccessTokenSilently);
 
-      const res = await fetch(`${API_BASE_URL}/notes/?skip=${skip}&limit=${limit}`);
+      const res = await fetch(`${API_BASE_URL}/notes/?skip=${skip}&limit=${limit}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -68,12 +83,18 @@ export function useNotesQuery(skip = 0, limit = 10, options = {}): UseQueryResul
  * @returns 特定のノートのクエリ結果
  */
 export function useNoteByIdQuery(id: string, options = {}): UseQueryResult<Note, Error> {
+  const { getAccessTokenSilently } = useAuth0();
 
   return useQuery<Note, Error>({
     queryKey: ['note', id],
     queryFn: async () => {
+      const accessToken = await getAccessToken(getAccessTokenSilently);
 
-      const res = await fetch(`${API_BASE_URL}/notes/${id}/`);
+      const res = await fetch(`${API_BASE_URL}/notes/${id}/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -92,14 +113,17 @@ export function useNoteByIdQuery(id: string, options = {}): UseQueryResult<Note,
  */
 export function useCreateNoteMutation(): UseMutationResult<NoteState, Error, { content: string }> {
   const queryClient = useQueryClient();
+  const { getAccessTokenSilently } = useAuth0();
 
   return useMutation<NoteState, Error, { content: string }>({
     mutationFn: async ({ content }) => {
+      const accessToken = await getAccessToken(getAccessTokenSilently);
 
       const res = await fetch(`${API_BASE_URL}/notes/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ content }),
       });
@@ -133,14 +157,17 @@ export function useCreateNoteMutation(): UseMutationResult<NoteState, Error, { c
  */
 export function useUpdateNoteMutation(): UseMutationResult<NoteState, Error, { id: string; content: string }> {
   const queryClient = useQueryClient();
+  const { getAccessTokenSilently } = useAuth0();
 
   return useMutation<NoteState, Error, { id: string; content: string }>({
     mutationFn: async ({ id, content }) => {
+      const accessToken = await getAccessToken(getAccessTokenSilently);
 
       const res = await fetch(`${API_BASE_URL}/notes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ content }),
       });
@@ -173,14 +200,17 @@ export function useUpdateNoteMutation(): UseMutationResult<NoteState, Error, { i
  */
 export function useDeleteNoteMutation(): UseMutationResult<NoteState, Error, { id: string }> {
   const queryClient = useQueryClient();
+  const { getAccessTokenSilently } = useAuth0();
 
   return useMutation<NoteState, Error, { id: string }>({
     mutationFn: async ({ id }) => {
+      const accessToken = await getAccessToken(getAccessTokenSilently);
 
       const res = await fetch(`${API_BASE_URL}/notes/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
