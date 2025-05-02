@@ -1,6 +1,9 @@
+"use client";
+
+import React, { useState } from 'react';
 import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { deleteNote } from '@/app/lib/actions';
+import { useDeleteNoteMutation } from "@/app/hooks/useNotesApi"
 
 export function CreateNoteButton() {
   return (
@@ -26,14 +29,35 @@ export function UpdateNoteButton({ id }: { id: string }) {
 }
 
 export function DeleteNoteButton({ id }: { id: string }) {
-  const deleteNoteWithId = deleteNote.bind(null, id);  // FIXME
+  const [errors, setErrors] = useState<string | null>(null);
+  const { mutate: deleteNote, isPending: isLoading, isError, error } = useDeleteNoteMutation();
+
+  const handleDelete = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors(null); // Clear previous errors
+
+    deleteNote(
+      { id },
+      {
+        onError: (mutationError) => {
+          console.error('Error deleting a note:', mutationError);
+          setErrors(mutationError.message);
+        }
+      }
+    );
+  }
 
   return (
-    <form action={deleteNoteWithId}>
-      <button type="submit" className="rounded-md border p-2 hover:bg-gray-100">
+    <div className="relative group">
+      <button type="button" onClick={handleDelete} className="rounded-md border p-2 hover:bg-gray-100">
         <span className="sr-only">Delete</span>
         <TrashIcon className="w-5" />
       </button>
-    </form>
+      {errors && (
+        <div className="absolute left-1/2 top-full z-10 mt-2 w-max -translate-x-1/2 rounded-md bg-gray-800 px-3 py-2 text-sm text-white opacity-0 group-hover:opacity-100">
+          {errors}
+        </div>
+      )}
+    </div>
   );
 }

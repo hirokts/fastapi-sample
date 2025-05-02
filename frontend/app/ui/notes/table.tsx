@@ -1,16 +1,18 @@
+"use client";
+
 import { UpdateNoteButton, DeleteNoteButton } from '@/app/ui/notes/buttons';
 import { formatDateToLocal } from '@/app/lib/utils';
-import { fetchNotes } from '@/app/lib/data';
+import { useNotesQuery } from "@/app/hooks/useNotesApi"
 
-export default async function NotesTable({
+export default function NotesTable({
   query,
   currentPage,
 }: {
   query: string;
   currentPage: number;
 }) {
-  const notes = await fetchNotes();
   console.log(`query: ${query} currentPage: ${currentPage}`);
+  const { data: notes } = useNotesQuery(undefined, undefined, { suspense: true });
 
   return (
     <div className="mt-6 flow-root">

@@ -1,12 +1,14 @@
+"use client";
+
+import React, { use, useCallback, useMemo, useState } from 'react';
 import {
   BanknotesIcon,
   ClockIcon,
   UserGroupIcon,
-  // InboxIcon,
   DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchCardData } from '@/app/lib/data';
+import { useNotesCountQuery } from "@/app/hooks/useNotesApi"
 
 const iconMap = {
   collected: BanknotesIcon,
@@ -14,19 +16,6 @@ const iconMap = {
   pending: ClockIcon,
   notes: DocumentDuplicateIcon,
 };
-
-export default async function CardWrapper() {
-  const {
-    notesCount,
-  } = await fetchCardData();
-
-  return (
-    <>
-      {/* NOTE: Uncomment this code in Chapter 9 */}
-      <Card title="Total Notes" value={notesCount} type="notes" />
-    </>
-  );
-}
 
 export function Card({
   title,
@@ -52,5 +41,15 @@ export function Card({
         {value}
       </p>
     </div>
+  );
+}
+
+export default function CardWrapper() {
+  const { data: count } = useNotesCountQuery({ suspense: true });
+
+  return (
+    <>
+      <Card title="Total Notes" value={count ?? ''} type="notes" />
+    </>
   );
 }

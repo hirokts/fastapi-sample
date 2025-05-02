@@ -2,17 +2,60 @@
 
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
-import { updateNote, NoteState } from '@/app/lib/actions';
-import { useActionState } from 'react';
+import { useState } from 'react';
+import { useUpdateNoteMutation } from '@/app/hooks/useNotesApi';
+import { useRouter } from 'next/navigation';
+import { Note } from '@/app/lib/definitions';
+import { UpdateNoteSchema } from '@/app/zodSchemas/note';
 
-export default function EditForm({ note }: { note: { id: string; content: string } }) {
-  const initialState: NoteState = { message: null, errors: {} };
-  const [, formAction] = useActionState(updateNote, initialState); // '_' を削除し、配列の2番目の要素だけを使用
+type FormErrors = {
+  type: "api" | "zod";
+  content?: string[];
+};
+
+export default function EditForm({ note }: { note: Note }) {
+  const [content, setContent] = useState(note.content);
+  const [errors, setErrors] = useState<FormErrors | null>(null); // State for validation errors
+  const router = useRouter();
+  const { mutate: updateNote, isPending: isLoading, isError, error } = useUpdateNoteMutation();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors(null); // Clear previous errors
+
+    // Validate form data using Zod
+    const validatedFields = UpdateNoteSchema.safeParse({ content });
+
+    // If validation fails, update errors state and return
+    if (!validatedFields.success) {
+      setErrors({
+        type: "zod",
+        ...validatedFields.error.flatten().fieldErrors
+      });
+      return;
+    }
+
+    updateNote(
+      { id: note.id, content },
+      {
+        onSuccess: () => {
+          setContent('');
+          router.push('/dashboard/notes');
+        },
+        onError: (mutationError) => {
+          console.error('Error creating a note:', mutationError);
+          setErrors({
+            type: "api",
+            content: [mutationError.message]
+          });
+        }
+      }
+    );
+  };
 
   return (
-    <form action={formAction}>
+    <form onSubmit={handleSubmit}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
-
         {/* Note Content */}
         <div className="mb-4">
           <label htmlFor="content" className="mb-2 block text-sm font-medium">
@@ -23,13 +66,27 @@ export default function EditForm({ note }: { note: { id: string; content: string
               <input
                 id="content"
                 name="content"
-                type="string"
-                defaultValue={note.content}
+                type="text"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
                 placeholder="Content..."
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 required
+                aria-describedby="content-error"
               />
             </div>
+          </div>
+          {/* Display Zod validation errors */}
+          <div id="content-error" aria-live="polite" className="mt-2 text-sm text-red-500">
+            {errors?.type == "zod" && errors.content?.map((error: string) => (
+              <p key={error}>{error}</p>
+            ))}
+          </div>
+          {/* Display API call errors (optional, can be combined or styled differently) */}
+          <div id="content-error" aria-live="polite" className="mt-2 text-sm text-red-500">
+            {errors?.type == "api" && errors.content?.map((error: string) => (
+              <p key={error}>{error}</p>
+            ))}
           </div>
         </div>
       </div>
@@ -40,7 +97,9 @@ export default function EditForm({ note }: { note: { id: string; content: string
         >
           Cancel
         </Link>
-        <Button type="submit">Update Note</Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Updating...' : 'Update Note'}
+        </Button>
       </div>
     </form>
   );

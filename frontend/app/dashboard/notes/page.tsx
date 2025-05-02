@@ -6,11 +6,6 @@ import { lusitana } from '@/app/ui/fonts';
 import { NotesTableSkeleton } from '@/app/ui/skeletons';
 import { Suspense } from 'react';
 // import { fetchNotePages } from '@/app/lib/data';
-import { Metadata } from 'next';
- 
-export const metadata: Metadata = {
-  title: 'Notes',
-};
 
 export default async function Page(props: {
   searchParams?: Promise<{

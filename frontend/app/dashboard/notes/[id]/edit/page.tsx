@@ -1,14 +1,25 @@
-import Form from '@/app/ui/notes/edit-form';
-import Breadcrumbs from '@/app/ui/components/breadcrumbs';
-import { fetchNoteById } from '@/app/lib/data';
-import { notFound } from 'next/navigation';
+"use client";
 
-export default async function Page(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+import { use } from 'react';
+import EditForm from '@/app/ui/notes/edit-form';
+import Breadcrumbs from '@/app/ui/components/breadcrumbs';
+import { notFound } from 'next/navigation';
+import { useNoteByIdQuery } from '@/app/hooks/useNotesApi';
+
+export default function Page(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const id = params.id;
-  const [note] = await Promise.all([
-    fetchNoteById(id),
-  ]);
+
+  const { data: note, isLoading, isError, error } = useNoteByIdQuery(id);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    console.error("Error fetching note:", error);
+    return <div>Error loading note data. Please try again later.</div>;
+  }
 
   if (!note) {
     notFound();
@@ -26,7 +37,8 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
           },
         ]}
       />
-      <Form note={note} />
+      <EditForm note={note} />
     </main>
   );
 }
+
