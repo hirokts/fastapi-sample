@@ -9,8 +9,10 @@ dependencies = [
     "asyncpg>=0.30.0",
     "fastapi>=0.115.12",
     "psycopg>=3.2.6",
+    "psycopg2>=2.9.10",
     "uvicorn[standard]>=0.34.2",
 ]
+# psycopg2はAlembic用
 
 [dependency-groups]
 dev = [
