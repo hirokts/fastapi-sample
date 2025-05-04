@@ -1,2 +1,1 @@
-# ai-agent-base
-LangGraph Based API and  Chat Based UI
+# fastapi sample with nextjs
