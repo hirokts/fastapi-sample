@@ -1,10 +1,15 @@
+"use client";
+
 import BaseLogo from '@/app/ui/base-logo';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link';
 import { lusitana } from '@/app/ui/fonts';
 import Image from 'next/image';
+import { useAuth0 } from "@auth0/auth0-react";
+import Link from "next/link";
 
 export default function Page() {
+  const { user, loginWithRedirect } = useAuth0();
+
   return (
     <main className="flex min-h-screen flex-col p-6">
       <div className="flex h-20 shrink-0 items-end rounded-lg bg-blue-500 p-4 md:h-52">
@@ -19,12 +24,27 @@ export default function Page() {
             className={`${lusitana.className} text-xl text-gray-800 md:text-3xl md:leading-normal`}
           >            <strong>Welcome to Base.</strong> This is the example for FastAPI backend.
           </p>
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-5 self-start rounded-lg bg-blue-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-400 md:text-base"
-          >
-            <span>Log in</span> <ArrowRightIcon className="w-5 md:w-6" />
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-5 self-start rounded-lg bg-blue-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-400 md:text-base"
+            >
+              <span>Log in</span> <ArrowRightIcon className="w-5 md:w-6" />
+            </Link>
+          ) : (
+            <button
+              onClick={() => loginWithRedirect(
+                {
+                  appState: {
+                    returnTo: `${window.location.origin}/dashboard`
+                  }
+                }
+              )}
+              className="flex items-center gap-5 self-start rounded-lg bg-blue-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-400 md:text-base"
+            >
+              <span>Dashboard</span> <ArrowRightIcon className="w-5 md:w-6" />
+            </button>
+          )}
         </div>
         <div className="flex items-center justify-center p-6 md:w-3/5 md:px-28 md:py-12">
           {/* Add Hero Images Here */}
