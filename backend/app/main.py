@@ -1,26 +1,19 @@
 import os
 from os.path import dirname, join
 
-from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 from app.schemas.notes import NoteCreate, NoteResponse
-from app.database import engine, Base, get_async_session
+from app.database import get_async_session
 from app.crud.notes import create_note, get_note, get_notes, update_note, delete_note
 
 dotenv_path = join(dirname(dirname(__file__)), ".env")
 load_dotenv(dotenv_path)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,6 +22,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}

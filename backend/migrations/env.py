@@ -9,6 +9,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.database import Base
+import app.models  # noqa
 
 dotenv_path = join(dirname(dirname(__file__)), ".env")
 load_dotenv(dotenv_path)
